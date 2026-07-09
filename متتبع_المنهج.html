@@ -346,7 +346,7 @@ h1{ font-size: 28px; font-weight: 900; margin-bottom: 6px; }
 
   <div class="phase-card">
     <div class="phase-top">
-      <span class="phase-label">باقي على انتهاء جدول الـ29 يوم كامل</span>
+      <span class="phase-label">باقي على انتهاء جدول الـ30 يوم كامل</span>
       <span class="phase-count" id="scheduleRemaining">-</span>
     </div>
     <div class="phase-meta">
@@ -379,7 +379,7 @@ const STORAGE_KEY = 'abu-alhassan-study-tracker-v4';
 /* معرّف فيديو اليوتيوب */
 const CELEBRATION_YOUTUBE_ID = 'BiwlJl-aqX4';
 
-/* يوم 1 بجدولك (29 يوم) — بدأ 2 يوليو 2026 */
+/* يوم 1 بجدولك (30 يوم) — بدأ 2 يوليو 2026، ينتهي 31 يوليو */
 const SCHEDULE_START = '2026-07-02';
 
 let state = null;
@@ -538,22 +538,22 @@ function setExamDate(value){
   updateDaysLeft();
 }
 
-/* ===== 29-day schedule phase ===== */
+/* ===== 30-day schedule phase ===== */
 function updatePhase(){
   const start = new Date(SCHEDULE_START + 'T00:00:00');
   const now = new Date();
   const dayNumber = Math.floor((now - start) / (1000*60*60*24)) + 1;
 
   let phaseName, nextPhaseDay, nextPhaseName;
-  if(dayNumber <= 20){
+  if(dayNumber <= 21){
     phaseName = 'مراجعة بسيطة';
-    nextPhaseDay = 21;
+    nextPhaseDay = 22;
     nextPhaseName = 'حل الأسئلة الوزارية';
-  } else if(dayNumber <= 25){
+  } else if(dayNumber <= 26){
     phaseName = 'حل الأسئلة الوزارية';
-    nextPhaseDay = 26;
+    nextPhaseDay = 27;
     nextPhaseName = 'حل النماذج الامتحانية';
-  } else if(dayNumber <= 29){
+  } else if(dayNumber <= 30){
     phaseName = 'حل النماذج الامتحانية';
     nextPhaseDay = null;
     nextPhaseName = null;
@@ -563,9 +563,9 @@ function updatePhase(){
     nextPhaseName = null;
   }
 
-  document.getElementById('phaseCurrentName').textContent = 'اليوم ' + Math.max(dayNumber,1) + ' من 29 — ' + phaseName;
+  document.getElementById('phaseCurrentName').textContent = 'اليوم ' + Math.max(dayNumber,1) + ' من 30 — ' + phaseName;
 
-  const remaining = 29 - dayNumber;
+  const remaining = 30 - dayNumber;
   document.getElementById('scheduleRemaining').textContent = remaining > 0 ? (remaining + ' يوم') : (remaining === 0 ? 'اليوم الأخير' : 'انتهى ✓');
 
   if(nextPhaseDay){
@@ -577,8 +577,8 @@ function updatePhase(){
     document.getElementById('phaseNextInfo').textContent = '';
   }
 
-  const daysToMinisterial = 21 - dayNumber;
-  const daysToModels = 26 - dayNumber;
+  const daysToMinisterial = 22 - dayNumber;
+  const daysToModels = 27 - dayNumber;
   document.getElementById('statMinisterial').textContent = daysToMinisterial > 0 ? daysToMinisterial : '✓';
   document.getElementById('statModels').textContent = daysToModels > 0 ? daysToModels : '✓';
   renderPhaseDatesTable(start);
@@ -596,9 +596,9 @@ function dayOffsetDate(startDate, dayNum){
 
 function renderPhaseDatesTable(start){
   const phases = [
-    { name: 'تغطية المنهج (مراجعة بسيطة)', from: 1, to: 20 },
-    { name: 'حل الأسئلة الوزارية', from: 21, to: 25 },
-    { name: 'حل النماذج الامتحانية', from: 26, to: 29 }
+    { name: 'تغطية المنهج (مراجعة بسيطة)', from: 1, to: 21 },
+    { name: 'حل الأسئلة الوزارية', from: 22, to: 26 },
+    { name: 'حل النماذج الامتحانية', from: 27, to: 30 }
   ];
   const box = document.getElementById('phaseDatesTable');
   if(!box) return;
