@@ -359,6 +359,7 @@ h1{ font-size: 28px; font-weight: 900; margin-bottom: 6px; }
     <div class="phase-meta">
       <span id="phaseNextInfo"></span>
     </div>
+    <div id="phaseDatesTable" style="margin-top:14px; padding-top:14px; border-top:1px dashed var(--border); display:flex; flex-direction:column; gap:8px;"></div>
   </div>
 
   <div id="subjects"></div>
@@ -384,7 +385,7 @@ const SCHEDULE_START = '2026-07-02';
 let state = null;
 
 const defaultState = {
- examDate: '2026-08-01',
+  examDate: '2026-08-01',
   celebrated: false,
   subjects: [
     { id: 's1', name: 'الفيزياء', chapters: [
@@ -580,6 +581,38 @@ function updatePhase(){
   const daysToModels = 26 - dayNumber;
   document.getElementById('statMinisterial').textContent = daysToMinisterial > 0 ? daysToMinisterial : '✓';
   document.getElementById('statModels').textContent = daysToModels > 0 ? daysToModels : '✓';
+  renderPhaseDatesTable(start);
+}
+
+function fmtArabicDate(d){
+  return d.toLocaleDateString('ar-IQ', { day: 'numeric', month: 'long' });
+}
+
+function dayOffsetDate(startDate, dayNum){
+  const d = new Date(startDate);
+  d.setDate(d.getDate() + (dayNum - 1));
+  return d;
+}
+
+function renderPhaseDatesTable(start){
+  const phases = [
+    { name: 'تغطية المنهج (مراجعة بسيطة)', from: 1, to: 20 },
+    { name: 'حل الأسئلة الوزارية', from: 21, to: 25 },
+    { name: 'حل النماذج الامتحانية', from: 26, to: 29 }
+  ];
+  const box = document.getElementById('phaseDatesTable');
+  if(!box) return;
+  box.innerHTML = phases.map(p => {
+    const fromDate = dayOffsetDate(start, p.from);
+    const toDate = dayOffsetDate(start, p.to);
+    const dayCount = p.to - p.from + 1;
+    return `
+      <div style="display:flex; justify-content:space-between; align-items:center; font-size:13px;">
+        <span style="color:var(--text);">${p.name} <span style="color:var(--muted);">(${dayCount} أيام)</span></span>
+        <span style="font-family:'JetBrains Mono', monospace; color:var(--accent);">${fmtArabicDate(fromDate)} → ${fmtArabicDate(toDate)}</span>
+      </div>
+    `;
+  }).join('');
 }
 
 /* ===== celebration logic ===== */
