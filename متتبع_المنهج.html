@@ -539,37 +539,47 @@ function setExamDate(value){
 }
 
 /* ===== 30-day schedule phase ===== */
+/* آخر يوم بكل مرحلة (شامل ذلك اليوم نفسه) */
+const PHASE1_END = 23; // آخر يوم تغطية المنهج
+const PHASE2_END = 28; // آخر يوم الأسئلة الوزارية
+const PHASE3_END = 30; // آخر يوم النماذج الامتحانية
+
+/* عدد الأيام الباقية لحد نهاية اليوم المحدد (يوصل صفر وهو بنفس آخر يوم، ويتغير بعد منتصف ليلته) */
+function daysUntilEnd(endDay, dayNumber){
+  return Math.max(endDay - dayNumber, 0);
+}
+
 function updatePhase(){
   const start = new Date(SCHEDULE_START + 'T00:00:00');
   const now = new Date();
   const dayNumber = Math.floor((now - start) / (1000*60*60*24)) + 1;
 
-  let phaseName, nextPhaseDay, nextPhaseName;
-  if(dayNumber <= 23){
+  let phaseName, phaseEndDay, nextPhaseName;
+  if(dayNumber <= PHASE1_END){
     phaseName = 'مراجعة بسيطة';
-    nextPhaseDay = 24;
+    phaseEndDay = PHASE1_END;
     nextPhaseName = 'حل الأسئلة الوزارية';
-  } else if(dayNumber <= 28){
+  } else if(dayNumber <= PHASE2_END){
     phaseName = 'حل الأسئلة الوزارية';
-    nextPhaseDay = 29;
+    phaseEndDay = PHASE2_END;
     nextPhaseName = 'حل النماذج الامتحانية';
-  } else if(dayNumber <= 30){
+  } else if(dayNumber <= PHASE3_END){
     phaseName = 'حل النماذج الامتحانية';
-    nextPhaseDay = null;
+    phaseEndDay = null;
     nextPhaseName = null;
   } else {
     phaseName = 'انتهى الجدول - بالتوفيق بالامتحان';
-    nextPhaseDay = null;
+    phaseEndDay = null;
     nextPhaseName = null;
   }
 
   document.getElementById('phaseCurrentName').textContent = 'اليوم ' + Math.max(dayNumber,1) + ' من 30 — ' + phaseName;
 
-  const remaining = 30 - dayNumber;
+  const remaining = PHASE3_END - dayNumber;
   document.getElementById('scheduleRemaining').textContent = remaining > 0 ? (remaining + ' يوم') : (remaining === 0 ? 'اليوم الأخير' : 'انتهى ✓');
 
-  if(nextPhaseDay){
-    const daysLeft = nextPhaseDay - dayNumber;
+  if(phaseEndDay){
+    const daysLeft = daysUntilEnd(phaseEndDay, dayNumber);
     document.getElementById('phaseCountdown').textContent = daysLeft + ' يوم';
     document.getElementById('phaseNextInfo').textContent = 'للبدء بـ ' + nextPhaseName;
   } else {
@@ -577,10 +587,10 @@ function updatePhase(){
     document.getElementById('phaseNextInfo').textContent = '';
   }
 
-  const daysToMinisterial = 24 - dayNumber;
-  const daysToModels = 29 - dayNumber;
-  document.getElementById('statMinisterial').textContent = daysToMinisterial > 0 ? daysToMinisterial : '✓';
-  document.getElementById('statModels').textContent = daysToModels > 0 ? daysToModels : '✓';
+  const daysToMinisterial = dayNumber <= PHASE1_END ? daysUntilEnd(PHASE1_END, dayNumber) : 0;
+  const daysToModels = dayNumber <= PHASE2_END ? daysUntilEnd(PHASE2_END, dayNumber) : 0;
+  document.getElementById('statMinisterial').textContent = (dayNumber <= PHASE1_END) ? daysToMinisterial : '✓';
+  document.getElementById('statModels').textContent = (dayNumber <= PHASE2_END) ? daysToModels : '✓';
   renderPhaseDatesTable(start);
 }
 
