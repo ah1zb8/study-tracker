@@ -1,3 +1,4 @@
+<!-- study-tracker.html — استبدال كامل -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -53,6 +54,10 @@ body{
 @keyframes fall{
   to{ transform: translateY(110vh) rotate(360deg); opacity: .3; }
 }
+@keyframes shimmer{
+  0%{ background-position: 0% 0%; }
+  100%{ background-position: 200% 0%; }
+}
 
 .top-brand{
   display:flex; justify-content: space-between; align-items:center; margin-bottom: 22px;
@@ -97,7 +102,9 @@ h1{ font-size: 28px; font-weight: 900; margin-bottom: 6px; }
   backdrop-filter: blur(var(--blur));
   -webkit-backdrop-filter: blur(var(--blur));
   border: 1px solid var(--border); border-radius: 10px; padding: 14px 10px; text-align:center;
+  transition: transform .2s ease, border-color .2s ease;
 }
+.stat-card:hover{ transform: translateY(-3px); border-color: var(--accent-dim); }
 .stat-num{ font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; color: var(--accent); }
 .stat-label{ font-size: 11px; color: var(--muted); margin-top: 4px; }
 
@@ -115,15 +122,23 @@ h1{ font-size: 28px; font-weight: 900; margin-bottom: 6px; }
 .overall-label{ font-size: 14px; color: var(--muted); }
 .overall-pct{ font-family: 'JetBrains Mono', monospace; font-size: 30px; font-weight: 700; color: var(--accent); }
 .bar-track{ height: 12px; background: var(--panel2); border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
-.bar-fill{ height: 100%; background: linear-gradient(90deg, var(--accent-dim), var(--accent)); border-radius: 6px; transition: width .4s ease; }
+.bar-fill{
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-dim), var(--accent), var(--accent-dim));
+  background-size: 200% 100%;
+  animation: shimmer 3.5s linear infinite;
+  border-radius: 6px; transition: width .4s ease;
+}
 .overall-meta{ display:flex; justify-content: space-between; margin-top: 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); }
 
 .exam-row{ display:flex; align-items:center; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border); flex-wrap: wrap; }
 .exam-row label{ font-size: 13px; color: var(--muted); white-space: nowrap; }
-.exam-row input[type="date"]{
+.exam-row input[type="date"], .exam-row input[type="number"]{
   background: var(--panel2); border: 1px solid var(--border); color: var(--text); font-family:'JetBrains Mono', monospace;
   padding: 6px 10px; border-radius: 6px; font-size: 13px;
 }
+.exam-row input[type="number"]{ width: 70px; }
+.exam-row .hint{ color: var(--muted); font-size: 11px; }
 .days-left{ font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--gold); margin-right: auto; }
 
 .subject{
@@ -163,7 +178,13 @@ h1{ font-size: 28px; font-weight: 900; margin-bottom: 6px; }
 .subject-pct b{ color: var(--accent); font-size: 16px; }
 
 .mini-bar-track{ height: 7px; background: var(--panel2); border-radius: 4px; overflow: hidden; margin-bottom: 14px; border: 1px solid var(--border); }
-.mini-bar-fill{ height: 100%; background: var(--success); transition: width .3s ease; }
+.mini-bar-fill{
+  height: 100%;
+  background: linear-gradient(90deg, var(--success), #8ff5cf, var(--success));
+  background-size: 200% 100%;
+  animation: shimmer 3.5s linear infinite;
+  transition: width .3s ease;
+}
 
 .chapter{ display:flex; align-items:center; gap: 10px; padding: 8px 4px; border-bottom: 1px solid var(--border); }
 .chapter:last-of-type{ border-bottom: none; }
@@ -269,7 +290,9 @@ h1{ font-size: 28px; font-weight: 900; margin-bottom: 6px; }
 .phase-top{ display:flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
 .phase-label{ font-size: 14px; color: var(--muted); }
 .phase-count{ font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700; color: var(--accent); }
-.phase-meta{ display:flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); margin-top: 4px; }
+.phase-meta{ display:flex; justify-content: space-between; align-items:center; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); margin-top: 4px; }
+.phase-icon{ color: var(--accent); flex-shrink: 0; }
+.phase-icon-label{ display:flex; align-items:center; gap: 6px; font-family:'Tajawal',sans-serif; font-size: 13px; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -331,6 +354,11 @@ h1{ font-size: 28px; font-weight: 900; margin-bottom: 6px; }
       <input type="date" id="examDate" onchange="setExamDate(this.value)">
       <span class="days-left" id="daysLeftInline"></span>
     </div>
+    <div class="exam-row">
+      <label>أيام الأسئلة الوزارية:</label>
+      <input type="number" id="ministerialDaysInput" min="0" value="0" onchange="setMinisterialDays(this.value)">
+      <span class="hint">خليه صفر لين تنحدد المواعيد — كل الأيام تروح لتغطية المنهج تلقائياً</span>
+    </div>
   </div>
   <div class="stats-grid" style="grid-template-columns: 1fr;">
     <div class="stat-card">
@@ -342,11 +370,20 @@ h1{ font-size: 28px; font-weight: 900; margin-bottom: 6px; }
 
   <div class="phase-card">
     <div class="phase-top">
-      <span class="phase-label" id="scheduleTotalLabel">باقي على انتهاء جدول الـ34 يوم كامل</span>
+      <span class="phase-label" id="scheduleTotalLabel">باقي على انتهاء الجدول</span>
       <span class="phase-count" id="scheduleRemaining">-</span>
     </div>
     <div class="phase-meta">
       <span id="phaseCurrentName">-</span>
+    </div>
+    <div class="phase-meta" style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--border);">
+      <span class="phase-icon-label">
+        <svg class="phase-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15">
+          <rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>
+        </svg>
+        نهاية تغطية المنهج
+      </span>
+      <span class="phase-count" id="coverageEndDate" style="font-size:15px;">-</span>
     </div>
     <div class="phase-meta" style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--border);">
       <span class="phase-label" style="font-size:12px;">المرحلة القادمة</span>
@@ -370,7 +407,7 @@ h1{ font-size: 28px; font-weight: 900; margin-bottom: 6px; }
 </div>
 
 <script>
-const STORAGE_KEY = 'abu-alhassan-study-tracker-v4';
+const STORAGE_KEY = 'abu-alhassan-study-tracker-v5';
 
 /* معرّف فيديو اليوتيوب */
 const CELEBRATION_YOUTUBE_ID = 'BiwlJl-aqX4';
@@ -382,6 +419,7 @@ let state = null;
 
 const defaultState = {
   examDate: '2026-08-04',
+  ministerialDays: 0,   // أيام الأسئلة الوزارية — صفر لين تنحدد، وقابلة للتعديل من الواجهة
   celebrated: false,
   subjects: [
     { id: 's1', name: 'الفيزياء', chapters: [
@@ -473,17 +511,15 @@ function loadState(){
       state = JSON.parse(raw);
       if(!state.examDate) state.examDate = defaultState.examDate;
       if(typeof state.celebrated === 'undefined') state.celebrated = false;
+      if(typeof state.ministerialDays === 'undefined' || state.ministerialDays === null){
+        state.ministerialDays = 0;
+      }
     } else {
       state = JSON.parse(JSON.stringify(defaultState));
       saveState();
     }
   } catch(e){
     state = JSON.parse(JSON.stringify(defaultState));
-    saveState();
-  }
-  // تحديث صريح لتاريخ الامتحان إلى 4 آب/أغسطس 2026 (طلب أبو الحسن) حتى لو كان محفوظ سابقاً بتاريخ مختلف
-  if(state.examDate !== '2026-08-04'){
-    state.examDate = '2026-08-04';
     saveState();
   }
   render();
@@ -533,12 +569,35 @@ function setExamDate(value){
   state.examDate = value;
   saveState();
   updateDaysLeft();
+  updatePhase();
 }
 
-/* ===== 30-day schedule phase ===== */
-/* آخر يوم بكل مرحلة (شامل ذلك اليوم نفسه) — تغطية المنهج 29 يوم (25+4 بعد تعديل تاريخ الامتحان)، الأسئلة الوزارية 5 أيام */
-const PHASE1_END = 29; // آخر يوم تغطية المنهج
-const PHASE2_END = 34; // آخر يوم الأسئلة الوزارية (نهاية الجدول)
+function setMinisterialDays(value){
+  let n = parseInt(value, 10);
+  if(isNaN(n) || n < 0) n = 0;
+  state.ministerialDays = n;
+  saveState();
+  updatePhase();
+}
+
+/* ===== 30-day schedule phase (ديناميكي حسب تاريخ الامتحان وعدد أيام الأسئلة الوزارية) ===== */
+
+/* يحسب: تاريخ البداية، إجمالي أيام الجدول (لين يوم الامتحان)،
+   أيام الأسئلة الوزارية الفعلية، ويوم انتهاء تغطية المنهج ويوم انتهاء الجدول كامل */
+function computeScheduleNumbers(){
+  const start = new Date(SCHEDULE_START + 'T00:00:00');
+  const examD = new Date(state.examDate + 'T00:00:00');
+  let totalDays = Math.round((examD - start) / (1000*60*60*24)) + 1;
+  if(totalDays < 1) totalDays = 1;
+
+  let ministerial = Math.max(0, parseInt(state.ministerialDays, 10) || 0);
+  if(ministerial >= totalDays) ministerial = Math.max(totalDays - 1, 0);
+
+  const phase1End = totalDays - ministerial; // آخر يوم تغطية المنهج
+  const phase2End = totalDays;               // آخر يوم بكل الجدول (يوم الامتحان)
+
+  return { start, totalDays, ministerial, phase1End, phase2End };
+}
 
 /* عدد الأيام الباقية شاملة اليوم الحالي نفسه، لحد نهاية اليوم المحدد */
 function daysUntilEnd(endDay, dayNumber){
@@ -546,16 +605,18 @@ function daysUntilEnd(endDay, dayNumber){
 }
 
 function updatePhase(){
-  const start = new Date(SCHEDULE_START + 'T00:00:00');
+  const nums = computeScheduleNumbers();
+  const { start, totalDays, ministerial, phase1End, phase2End } = nums;
+
   const now = new Date();
   const dayNumber = Math.floor((now - start) / (1000*60*60*24)) + 1;
 
   let phaseName, phaseEndDay, nextPhaseName;
-  if(dayNumber <= PHASE1_END){
+  if(dayNumber <= phase1End){
     phaseName = 'مراجعة بسيطة';
-    phaseEndDay = PHASE1_END;
-    nextPhaseName = 'حل الأسئلة الوزارية';
-  } else if(dayNumber <= PHASE2_END){
+    phaseEndDay = ministerial > 0 ? phase1End : null;
+    nextPhaseName = ministerial > 0 ? 'حل الأسئلة الوزارية' : null;
+  } else if(dayNumber <= phase2End){
     phaseName = 'حل الأسئلة الوزارية';
     phaseEndDay = null;
     nextPhaseName = null;
@@ -565,24 +626,40 @@ function updatePhase(){
     nextPhaseName = null;
   }
 
-  document.getElementById('phaseCurrentName').textContent = 'اليوم ' + Math.max(dayNumber,1) + ' من ' + PHASE2_END + ' — ' + phaseName;
+  document.getElementById('phaseCurrentName').textContent = 'اليوم ' + Math.max(dayNumber,1) + ' من ' + phase2End + ' — ' + phaseName;
 
-  const remaining = daysUntilEnd(PHASE2_END, dayNumber);
+  const remaining = daysUntilEnd(phase2End, dayNumber);
   document.getElementById('scheduleRemaining').textContent = remaining > 1 ? (remaining + ' يوم') : (remaining === 1 ? 'اليوم الأخير' : 'انتهى ✓');
-  document.getElementById('scheduleTotalLabel').textContent = 'باقي على انتهاء جدول الـ' + PHASE2_END + ' يوم كامل';
+  document.getElementById('scheduleTotalLabel').textContent = 'باقي على انتهاء جدول الـ' + phase2End + ' يوم كامل';
 
   if(phaseEndDay){
     const daysLeft = daysUntilEnd(phaseEndDay, dayNumber);
     document.getElementById('phaseCountdown').textContent = daysLeft + ' يوم';
     document.getElementById('phaseNextInfo').textContent = 'للبدء بـ ' + nextPhaseName;
+  } else if(dayNumber <= phase2End && ministerial === 0){
+    document.getElementById('phaseCountdown').textContent = '—';
+    document.getElementById('phaseNextInfo').textContent = 'ما محدد أسئلة وزارية بعد';
   } else {
     document.getElementById('phaseCountdown').textContent = '✓';
     document.getElementById('phaseNextInfo').textContent = '';
   }
 
-  const daysToMinisterial = dayNumber <= PHASE1_END ? daysUntilEnd(PHASE1_END, dayNumber) : 0;
-  document.getElementById('statMinisterial').textContent = (dayNumber <= PHASE1_END) ? daysToMinisterial : '✓';
-  renderPhaseDatesTable(start);
+  // أيقونة نهاية تغطية المنهج
+  const coverageEndDateEl = document.getElementById('coverageEndDate');
+  coverageEndDateEl.textContent = fmtArabicDate(dayOffsetDate(start, phase1End));
+
+  const daysToMinisterial = (ministerial > 0 && dayNumber <= phase1End) ? daysUntilEnd(phase1End, dayNumber) : 0;
+  document.getElementById('statMinisterial').textContent = ministerial > 0
+    ? (dayNumber <= phase1End ? daysToMinisterial : '✓')
+    : '—';
+
+  // مزامنة قيمة حقل الإدخال مع الحالة
+  const input = document.getElementById('ministerialDaysInput');
+  if(input && document.activeElement !== input){
+    input.value = ministerial;
+  }
+
+  renderPhaseDatesTable(nums);
 }
 
 function fmtArabicDate(d){
@@ -595,11 +672,14 @@ function dayOffsetDate(startDate, dayNum){
   return d;
 }
 
-function renderPhaseDatesTable(start){
+function renderPhaseDatesTable(nums){
+  const { start, ministerial, phase1End, phase2End } = nums;
   const phases = [
-    { name: 'تغطية المنهج (مراجعة بسيطة)', from: 1, to: PHASE1_END },
-    { name: 'حل الأسئلة الوزارية', from: PHASE1_END + 1, to: PHASE2_END }
+    { name: 'تغطية المنهج (مراجعة بسيطة)', from: 1, to: phase1End }
   ];
+  if(ministerial > 0){
+    phases.push({ name: 'حل الأسئلة الوزارية', from: phase1End + 1, to: phase2End });
+  }
   const box = document.getElementById('phaseDatesTable');
   if(!box) return;
   box.innerHTML = phases.map(p => {
@@ -746,6 +826,7 @@ function render(){
   }
 
   updateDaysLeft();
+  updatePhase();
 }
 
 function escapeAttr(str){
@@ -811,7 +892,6 @@ function deleteSubject(subjectId){
 updateClock();
 setInterval(updateClock, 60000);
 setInterval(updateDaysLeft, 60000);
-updatePhase();
 setInterval(updatePhase, 60000);
 
 document.addEventListener('visibilitychange', () => {
